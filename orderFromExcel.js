@@ -4,18 +4,19 @@ require("dotenv").config();
 const puppeteer = require("puppeteer-core");
 const fs = require("fs");
 const XLSX = require("xlsx");
-
-const amazonEmail = process.env.AMAZON_EMAIL; // Load email from .env make sure to make an env file and make a gitignore file for the env file
-const amazonPassword = process.env.AMAZON_PASSWORD; // Load password from .env make sure to make an env file
-
-let browser; // Global variable for the browser
-
+// Load email from .env make sure to make an env file and make a gitignore file for the env file
+const amazonEmail = process.env.AMAZON_EMAIL; 
+// Load password from .env make sure to make an env file
+const amazonPassword = process.env.AMAZON_PASSWORD; 
+// Global variable for the browser
+let browser; 
+// Executable path to chrome 
 async function launchBrowser() {
   console.log("Launching browser...");
   try {
     browser = await puppeteer.launch({
       executablePath:
-        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", // Executable path to chrome 
+        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", 
       headless: false,
     });
     console.log("Browser launched.");
@@ -42,17 +43,15 @@ async function loadCookies(page) {
     await captureScreenshot(page, "error_loading_cookies");
   }
 }
-/* End of Part 1 */
-
-/* Start of Part 2 */
+// Place your signin link here replace this link with your own sign in link
 async function signIn(page) {
   try {
     console.log("Navigating to Amazon sign-in page...");
     await page.goto(
-      "www.amazon.com/signinlinkgoeshere/thisisaplaceholderlink" // Place your signin link here replace this link with your own sign in link
+      "www.amazon.com/signinlinkgoeshere/thisisaplaceholderlink" 
     console.log("Navigated to Amazon sign-in page.");
-
-    await new Promise((r) => setTimeout(r, 2000)); // 2-second delay
+    // 2-second delay
+    await new Promise((r) => setTimeout(r, 2000)); 
 
     console.log("Checking if email is pre-filled...");
     const emailFieldValue = await page.$eval(
@@ -85,10 +84,11 @@ async function signIn(page) {
       visible: true,
       timeout: 20000,
     });
+    // Wait 15 seconds for manual OTP entry if you have it enabled 
     await page.click("input#signInSubmit");
 
     console.log("Waiting for OTP input...");
-    await new Promise((r) => setTimeout(r, 15000)); // Wait 15 seconds for manual OTP entry if you have it enabled 
+    await new Promise((r) => setTimeout(r, 15000)); 
 
     await saveCookies(page);
   } catch (err) {
@@ -96,9 +96,7 @@ async function signIn(page) {
     await captureScreenshot(page, "error_signin");
   }
 }
-/* End of Part 2 */
 
-/* Start of Part 3 */
 async function saveCookies(page) {
   try {
     console.log("Saving cookies...");
@@ -110,12 +108,12 @@ async function saveCookies(page) {
     await captureScreenshot(page, "error_saving_cookies");
   }
 }
-
+// Place your wishlist link here replace this link with your own
 async function navigateToWishlist(page) {
   try {
     console.log("Navigating to wishlist URL...");
     await page.goto(
-      "https://www.amazon.com/hz/placeyourwishlisthere" // Place your wishlist link here replace this link with your own
+      "https://www.amazon.com/hz/placeyourwishlisthere" 
     );
     console.log("Navigated to wishlist URL.");
   } catch (err) {
@@ -138,9 +136,7 @@ async function addAllToCart(page) {
     await captureScreenshot(page, "error_add_all_to_cart");
   }
 }
-/* End of Part 3 */
 
-/* Start of Part 4 */
 async function proceedToCheckout(page) {
   try {
     console.log('Clicking "Proceed to checkout" button...');
@@ -233,19 +229,16 @@ async function processOrder(page, name) {
   }
 }
 
-/* End of Part 4 */
-
-/* Start of Part 5 */
 async function captureScreenshot(page, errorType) {
   const screenshotPath = `./${errorType}.png`;
   await page.screenshot({ path: screenshotPath });
   console.log(`Screenshot captured for ${errorType}: ${screenshotPath}`);
 }
-
+// Make sure you use the excel sheet Amazon business provides for bulk ordering after you bulk upload your addresses with the same excel make sure you name it what you have it named here 
 async function run() {
   try {
     console.log("Loading Excel file...");
-    const workbook = XLSX.readFile("names.xlsx"); // Make sure you use the excel sheet Amazon business provides for bulk ordering after you bulk upload your addresses with the same excel make sure you name it what you have it named here 
+    const workbook = XLSX.readFile("names.xlsx"); 
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
 
@@ -269,7 +262,7 @@ async function run() {
 
     await loadCookies(page);
     await signIn(page);
-
+    // Log successful order
     const successfulOrders = [];
 
     for (const name of names) {
@@ -277,7 +270,7 @@ async function run() {
       await addAllToCart(page);
       await proceedToCheckout(page);
       await processOrder(page, name);
-      successfulOrders.push(name); // Log successful order
+      successfulOrders.push(name); 
     }
 
     await browser.close();
@@ -285,11 +278,11 @@ async function run() {
     // Output successful orders to a text file and console
     fs.writeFileSync("successful_orders.txt", successfulOrders.join("\n"));
     console.log("Successful orders:", successfulOrders);
+    // Ensure browser is closed in case of an error
   } catch (err) {
     console.error("Error in the run function:", err);
-    if (browser) await browser.close(); // Ensure browser is closed in case of an error
+    if (browser) await browser.close(); 
   }
 }
 
 run();
-/* End of Part 5 */

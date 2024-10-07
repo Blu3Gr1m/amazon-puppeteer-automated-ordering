@@ -1,4 +1,3 @@
-/* Start of Part 1 */
 require("dotenv").config();
 
 const puppeteer = require("puppeteer-core");
